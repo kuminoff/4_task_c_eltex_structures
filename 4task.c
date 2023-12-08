@@ -1,118 +1,169 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define maxSubscribers 2
+#define MAX_SUBSCRIBERS 2
 
-struct abonent
+// Задание на структуры
+// Написать программу абонентский справочник. Список абонентов
+// представляет собой статический массив (100 элементов) из структур
+// следующего в вида:
+// struct abonent {
+// char name[10];
+// char second_name[10];
+// char tel[10];
+// };
+// При запуске на экран выводится текстовое меню:
+// 1) Добавить абонента
+// 2) Удалить абонента
+// 3) Поиск абонентов по имени
+// 4) Вывод всех записей
+// 5) Выход
+// и пользователю предлагается ввести пункт меня с клавиатуры. Добавление
+// абонента в массив реализуется простым заполнением свободной структуры,
+// при выходе за 100 абонентов уведомить пользователя о переполнении
+// справочника и не позволять больше добавлять абонентов. При удалении
+// структура заполняется нулями. При поиске пользователь вводит с клавиатуры
+// имя абонентов и на экран выводится список всех абонентов с таким же именем.
+// Программа продолжает выполняться пока пользователь не введет пункт 5.
+
+struct Subscriber
 {
-    char name[32];
-    char second_name[32];
+    char name[30];
+    char second_name[30];
     char tel[11];
 };
 
-struct abonent subscribers[maxSubscribers];
+struct Subscriber subscriberBook[MAX_SUBSCRIBERS];
 
-int findEmptyIndex()
+void initSubscriberBook();                            // Инициализация массива
+void drawMenu();                                      // Отрисовка меню
+void addSubscriber();                                 // Добавление абонента
+void deleteSubscriber();                              // Удаление абонента
+void findSubscriber();                                // Поиск абонента
+void drawSubscriber(const struct Subscriber *member); // Вывод информации об абоненте
+void printAllSubscribers();                           // Вывод всех абонентов
+
+void initSubscriberBook()
 {
-    for (int i = 0; i < maxSubscribers; i++)
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++)
     {
-        if (strlen(subscribers[i].name) == 0)
-        {
-            return i;
-        }
+        strcpy(subscriberBook[i].name, "");
+        strcpy(subscriberBook[i].second_name, "");
+        strcpy(subscriberBook[i].tel, "");
     }
-    return -1;
+}
+
+void drawMenu()
+{
+    int taskNumber;
+    printf("\nПожалуйста, выберите действие от 1 до 5\n\n");
+    printf("1. Добавить нового абонента\n");
+    printf("2. Удалить абонента\n");
+    printf("3. Найти абонента по имени\n");
+    printf("4. Показать всех абонентов\n");
+    printf("5. Выйти\n");
+    scanf("%d", &taskNumber);
+
+    switch (taskNumber)
+    {
+    case 1:
+        addSubscriber();
+        break;
+    case 2:
+        deleteSubscriber();
+        break;
+    case 3:
+        findSubscriber();
+        break;
+    case 4:
+        printAllSubscribers();
+        break;
+    case 5:
+        exit(0);
+    default:
+        printf("\nЗадача с номером %d не существует\n", taskNumber);
+    }
 }
 
 void addSubscriber()
 {
-    int index = findEmptyIndex();
-    if (index != -1)
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++)
     {
-        printf("\nenter name, last name and phone number separated by a SPACE:\n");
-        scanf("%s", subscribers[index].name);
-        scanf("%s", subscribers[index].second_name);
-        scanf("%s", subscribers[index].tel);
+        if (strcmp(subscriberBook[i].name, "") == 0)
+        {
+            printf("\nВведите имя, фамилию и номер телефона абонента (через пробел): ");
+            scanf("%s %s %s", subscriberBook[i].name, subscriberBook[i].second_name, subscriberBook[i].tel);
+            break;
+        }
+        else if (i == MAX_SUBSCRIBERS - 1)
+        {
+            printf("\nПревышен лимит (%d) абонентов\n", MAX_SUBSCRIBERS);
+            break;
+        }
     }
-    else
-    {
-        printf("Directory is full. Cannot add more subscribers.\n");
-    }
+    drawMenu();
 }
 
 void deleteSubscriber()
 {
-    char nameToDelete[32];
+    int id;
+    printf("\nВведите ID абонента, которого нужно удалить: ");
+    scanf("%d", &id);
 
-    printf("Enter the name of the subscriber to delete: ");
-    scanf("%s", nameToDelete);
-
-    for (int i = 0; i < maxSubscribers; i++)
+    if (id >= MAX_SUBSCRIBERS)
     {
-        if (strcmp(subscribers[i].name, nameToDelete) == 0)
-        {
-            memset(&subscribers[i], 0, sizeof(struct abonent));
-        }
+        printf("\nПревышен лимит (%d) абонентов\n", MAX_SUBSCRIBERS);
     }
+    else if (strcmp(subscriberBook[id].name, "") == 0)
+    {
+        printf("\nАбонент с ID %d не существует\n", id);
+    }
+    else
+    {
+        strcpy(subscriberBook[id].name, "");
+        strcpy(subscriberBook[id].second_name, "");
+        strcpy(subscriberBook[id].tel, "");
+    }
+    drawMenu();
 }
 
-void searchSubscriber()
+void findSubscriber()
 {
-    char nameToSearch[32];
-
-    printf("Enter the name of the subscriber to search: ");
-    scanf("%s", nameToSearch);
-
-    for (int i = 0; i < maxSubscribers; i++)
+    char searchName[30];
+    printf("\nВведите имя абонента для поиска: ");
+    scanf("%s", searchName);
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++)
     {
-        if (strcmp(subscribers[i].name, nameToSearch) == 0)
+        if (strcmp(subscriberBook[i].name, searchName) == 0)
         {
-            printf("\n%s %s %s\n", subscribers[i].name, subscribers[i].second_name, subscribers[i].tel);
+            drawSubscriber(&subscriberBook[i]);
         }
     }
+    drawMenu();
+}
+
+void drawSubscriber(const struct Subscriber *member)
+{
+    printf("%s %s, %s\n", member->name, member->second_name, member->tel);
 }
 
 void printAllSubscribers()
 {
-    for (int i = 0; i < maxSubscribers; i++)
+    printf("\nСписок абонентов:\n");
+    for (int i = 0; i < MAX_SUBSCRIBERS; i++)
     {
-        if (strlen(subscribers[i].name) != 0)
+        if (strcmp(subscriberBook[i].name, "") != 0)
         {
-            printf("\t%s\t%s\t%s\t%s\t%s\t%s", "name", "last name", "telephone\n", subscribers[i].name, subscribers[i].second_name, subscribers[i].tel);
+            drawSubscriber(&subscriberBook[i]);
         }
     }
+    drawMenu();
 }
 
 int main()
 {
-    int choice;
-    do
-    {
-        printf("\nMenu:\n1) Add a subscriber\n2) Delete a subscriber\n3) Search for subscribers by name\n4) Output all records\n5) Exit\n\nEnter choice: ");
-        scanf("%d", &choice);
-
-        switch (choice)
-        {
-        case 1:
-            addSubscriber();
-            break;
-
-        case 2:
-            deleteSubscriber();
-            break;
-
-        case 3:
-            searchSubscriber();
-            break;
-
-        case 4:
-            printAllSubscribers();
-            break;
-
-        default:
-            break;
-        }
-    } while (choice != 5);
-
+    initSubscriberBook();
+    drawMenu();
     return 0;
 }
